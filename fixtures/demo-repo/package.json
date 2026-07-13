@@ -1,0 +1,9 @@
+{
+  "name": "demo-repo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Demo fixture for DepMigrate — contains deprecated Buffer() usage (DEP0005)",
+  "scripts": {
+    "test": "node test.js"
+  }
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "symbol": "Buffer",
+    "argType": "number_literal",
+    "newExpression": "Buffer.alloc({0})",
+    "transformType": "deterministic",
+    "source": "Node DEP0005",
+    "confidenceHistory": 0.95
+  },
+  {
+    "symbol": "Buffer",
+    "argType": "string_literal",
+    "newExpression": "Buffer.from({0})",
+    "transformType": "deterministic",
+    "source": "Node DEP0005",
+    "confidenceHistory": 0.98
+  },
+  {
+    "symbol": "Buffer",
+    "argType": "array_local_inferred",
+    "newExpression": "Buffer.from({0})",
+    "transformType": "deterministic",
+    "source": "Node DEP0005",
+    "confidenceHistory": 0.90
+  }
+]

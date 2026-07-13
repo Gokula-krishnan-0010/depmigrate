@@ -1,0 +1,29 @@
+{
+  "name": "depmigrate",
+  "version": "0.1.0",
+  "description": "A CLI tool that detects deprecated API usage and produces verified, confidence-scored code migrations.",
+  "type": "module",
+  "bin": {
+    "depmigrate": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/cli.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "better-sqlite3": "^11.7.0",
+    "commander": "^13.1.0",
+    "ts-morph": "^25.0.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}
