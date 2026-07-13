@@ -54,7 +54,10 @@ export class RulesCache {
    */
   private seedFromFile(): void {
     let seedPath = SEED_RULES_PATH;
-    // Also check for the compiled dist location
+    if (!fs.existsSync(seedPath)) {
+      // If run from dist/rules, check src/rules
+      seedPath = path.join(__dirname, "..", "..", "src", "rules", "seedRules.json");
+    }
     if (!fs.existsSync(seedPath)) {
       seedPath = path.join(__dirname, "seedRules.json");
     }

@@ -40,8 +40,8 @@ DepMigrate combines exact AST pattern matching, a SQLite rules cache, safe deter
 ### Setup
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
-   cd DepMigrate
+   git clone https://github.com/Gokula-krishnan-0010/depmigrate.git
+   cd depmigrate
    ```
 2. Install dependencies:
    ```bash
