@@ -11,6 +11,8 @@
 
 **DepMigrate** is a high-reliability, AST-powered CLI migration assistant designed to detect and upgrade deprecated API usages in your JavaScript and TypeScript codebases. 
 
+Today, several AI coding assistants and dependency management tools already exist. However, each solves only a portion of the software migration problem. The core problem is using an LLM to do a job that's 80% deterministic—and every token spent re-deriving a known migration rule is a token you don't have for the 20% that genuinely needs judgment. LLM calls only happen where ambiguity is real.
+
 DepMigrate combines exact AST pattern matching, a SQLite rules cache, safe deterministic syntax modifications, typechecking/testing validation loops, and LLM-assisted re-writing into an explainable trust layer. It supports Node.js (e.g., `Buffer` construct deprecations) and a comprehensive set of Expo / React Native API and import updates.
 
 ---
@@ -54,14 +56,57 @@ DepMigrate combines exact AST pattern matching, a SQLite rules cache, safe deter
 
 ---
 
-## 💻 CLI Commands
+## 🧪 Testing Commands & Examples
+
+### 1. Verification & Test Suite
+Executes the full suite of unit and integration tests verifying scanning, rules lookup, planners, scorers, and verification pipelines.
+```bash
+# Run all tests once
+npm test
+
+# Run tests with live watch mode
+npm run test:watch
+
+# Run linter / typecheck verification on source code
+npm run lint
+```
+
+### 2. Scanning Codebases (CLI Examples)
+
+#### Dry-run scan on a single file (Safe execution)
+Scans `test-gk.js` for Expo deprecations and produces reports without modifying the file.
+```bash
+node dist/cli.js scan ./fixtures/demo-repo/src/test-gk.js --dry-run
+```
+
+#### Dry-run scan on a whole directory
+Scans all Javascript and TypeScript files in the target directory.
+```bash
+node dist/cli.js scan ./fixtures/demo-repo --dry-run
+```
+
+#### Run auto-migrations (Modifies files)
+Performs automatic AST code updates on target files.
+```bash
+node dist/cli.js scan ./fixtures/demo-repo/src/parser.js
+```
+
+#### Customizing SQLite DB and Output Location
+Configure where reports and database files are read/written.
+```bash
+node dist/cli.js scan ./fixtures/demo-repo/src/test-gk.js --dry-run --output ./custom-reports --db ./my-custom-rules.db
+```
+
+---
+
+## 💻 CLI Commands Reference
 
 Run the CLI using `npx tsx src/cli.ts` (development) or built scripts via `node dist/cli.js`.
 
 ### 1. Scan and Migrate (`scan`)
 Scan a directory or file, find deprecations, apply deterministic or LLM-assisted changes, and run validations.
 ```bash
-# Scan a directory or single file (Dry Run - Recommended first step)
+# Scan a directory or single file (Dry Run)
 npx tsx src/cli.ts scan ./fixtures/demo-repo/src/test-gk.js --dry-run
 
 # Scan and apply changes (Mutates files)
@@ -105,21 +150,6 @@ npx tsx src/cli.ts confirm cs_004
 └── fixtures/
     └── demo-repo/           # Reference code targets (parser.js, test-gk.js)
 ```
-
----
-
-## 🧪 Testing and Verification
-
-Run the test suite using Vitest:
-```bash
-# Run all tests once
-npm test
-
-# Run tests in watch mode
-npm run test:watch
-```
-
-The test coverage spans across scanner classification, execution sorting, rules caching, typecheck/test runners, semantic diff validation, and cli command executions.
 
 ---
 
