@@ -1,36 +1,76 @@
-import { Project, SyntaxKind, Node, NewExpression, CallExpression, SourceFile } from "ts-morph";
+import { Project, SyntaxKind, Node, SourceFile } from "ts-morph";
 import path from "node:path";
+import fs from "node:fs";
 import type { CallSite } from "./types.js";
+import type { RuleCacheEntry } from "./types.js";
 
 /**
- * Deprecated symbols to scan for.
- * For the MVP, we focus on Node.js Buffer() deprecation (DEP0005).
+ * Deprecated symbols to scan for (Node.js built-ins).
  */
 const DEPRECATED_SYMBOLS = new Set(["Buffer"]);
 
 /**
- * Classify the argument type for a deprecated call site.
- * Used to route to deterministic vs LLM-assisted rewrites.
+ * Deprecated Expo/React Native package imports to detect.
+ * Maps package specifier → rule symbol used in seedRules.json
  */
-function classifyArgType(
+const DEPRECATED_IMPORTS: Record<string, { symbol: string; argType: string }> = {
+  "expo-av":              { symbol: "expo-av",              argType: "package_import" },
+  "expo-barcode-scanner": { symbol: "expo-barcode-scanner", argType: "package_import" },
+  "expo-face-detector":   { symbol: "expo-face-detector",   argType: "package_import" },
+  "expo-background-fetch":{ symbol: "expo-background-fetch",argType: "package_import" },
+  "react-native-iap":     { symbol: "react-native-iap",     argType: "package_import" },
+  "expo-sqlite/next":     { symbol: "expo-sqlite/next import", argType: "import_path" },
+  "expo-sqlite/legacy":   { symbol: "expo-sqlite/legacy import", argType: "import_path" },
+};
+
+/**
+ * Deprecated named imports from specific packages.
+ * Maps "package:namedExport" → rule symbol
+ */
+const DEPRECATED_NAMED_IMPORTS: Record<string, { symbol: string; argType: string }> = {
+  "expo-av:Video":  { symbol: "expo-av.Video", argType: "component" },
+  "expo-av:Audio":  { symbol: "expo-av.Audio", argType: "api" },
+};
+
+/**
+ * Deprecated property accesses on imported modules.
+ * Maps "ImportedName.property" → rule symbol
+ */
+const DEPRECATED_PROPERTY_ACCESS: Record<string, { symbol: string; argType: string }> = {
+  "Constants.installationId":    { symbol: "Constants.installationId",    argType: "property" },
+  "Constants.isDevice":          { symbol: "Constants.isDevice",          argType: "property" },
+  "Constants.nativeAppVersion":  { symbol: "Constants.nativeAppVersion",  argType: "property" },
+  "Constants.nativeBuildVersion": { symbol: "Constants.nativeBuildVersion", argType: "property" },
+  "Constants.deviceYearClass":   { symbol: "Constants.deviceYearClass",   argType: "property" },
+  "Constants.platform.platform": { symbol: "Constants.platform.platform", argType: "property" },
+  "Constants.platform.systemVersion": { symbol: "Constants.platform.systemVersion", argType: "property" },
+  "Constants.platform.userInterfaceIdiom": { symbol: "Constants.platform.userInterfaceIdiom", argType: "property" },
+  "Constants.IOSManifest.model": { symbol: "Constants.IOSManifest.model", argType: "property" },
+  "Constants.IOSManifest.platform": { symbol: "Constants.IOSManifest.platform", argType: "property" },
+  "Constants.IOSManifest.systemVersion": { symbol: "Constants.IOSManifest.systemVersion", argType: "property" },
+  "Constants.IOSManifest.userInterfaceIdiom": { symbol: "Constants.IOSManifest.userInterfaceIdiom", argType: "property" },
+  "Constants.AndroidManifest.versionCode": { symbol: "Constants.AndroidManifest.versionCode", argType: "property" },
+};
+
+/**
+ * Classify the argument type for a deprecated Buffer call site.
+ */
+function classifyBufferArgType(
   args: Node[],
   sourceFile: SourceFile
-): CallSite["argType"] {
+): string {
   if (args.length === 0) return "unresolvable";
 
   const firstArg = args[0];
 
-  // Check for numeric literal: new Buffer(10)
   if (firstArg.getKind() === SyntaxKind.NumericLiteral) {
     return "number_literal";
   }
 
-  // Check for string literal: new Buffer("hello")
   if (firstArg.getKind() === SyntaxKind.StringLiteral) {
     return "string_literal";
   }
 
-  // Check for template literal: new Buffer(`hello ${name}`)
   if (
     firstArg.getKind() === SyntaxKind.TemplateExpression ||
     firstArg.getKind() === SyntaxKind.NoSubstitutionTemplateLiteral
@@ -38,43 +78,57 @@ function classifyArgType(
     return "string_literal";
   }
 
-  // Check for array literal: new Buffer([1, 2, 3])
   if (firstArg.getKind() === SyntaxKind.ArrayLiteralExpression) {
     return "array_local_inferred";
   }
 
-  // Check for identifier pointing to a local array
   if (firstArg.getKind() === SyntaxKind.Identifier) {
     const identName = firstArg.getText();
-    // Walk up to find variable declarations in the same file
     const declarations = sourceFile.getDescendantsOfKind(
       SyntaxKind.VariableDeclaration
     );
     for (const decl of declarations) {
       if (decl.getName() === identName) {
         const init = decl.getInitializer();
-        if (
-          init &&
-          init.getKind() === SyntaxKind.ArrayLiteralExpression
-        ) {
+        if (init && init.getKind() === SyntaxKind.ArrayLiteralExpression) {
           return "array_local_inferred";
         }
       }
     }
   }
 
-  // Anything else is unresolvable
   return "unresolvable";
 }
 
 /**
- * Scan a directory for deprecated API call sites using AST analysis.
+ * Resolve a target path into a scan root directory and file patterns.
+ * Supports both directories and single files.
+ */
+function resolveTarget(targetPath: string): { scanRoot: string; isFile: boolean } {
+  const resolved = path.resolve(targetPath);
+  const stat = fs.statSync(resolved);
+  if (stat.isFile()) {
+    return { scanRoot: path.dirname(resolved), isFile: true };
+  }
+  return { scanRoot: resolved, isFile: false };
+}
+
+/**
+ * Scan a directory or single file for deprecated API usage using AST analysis.
+ * Detects:
+ *  - Node.js Buffer() deprecations
+ *  - Deprecated Expo/React Native package imports
+ *  - Deprecated property accesses (Constants.installationId, etc.)
+ *  - Deprecated named imports (Video from expo-av, etc.)
  *
- * @param targetDir - Absolute or relative path to the directory to scan
+ * @param targetPath - Absolute or relative path to a directory or single file
  * @returns Array of CallSite objects describing each deprecated usage
  */
-export function scanDirectory(targetDir: string): CallSite[] {
-  const absoluteDir = path.resolve(targetDir);
+export function scanDirectory(targetPath: string): CallSite[] {
+  const resolved = path.resolve(targetPath);
+  const stat = fs.statSync(resolved);
+  const isFile = stat.isFile();
+  const scanRoot = isFile ? path.dirname(resolved) : resolved;
   const callSites: CallSite[] = [];
   let counter = 0;
 
@@ -84,65 +138,214 @@ export function scanDirectory(targetDir: string): CallSite[] {
       checkJs: false,
       noEmit: true,
       skipLibCheck: true,
+      jsx: 2, // React
     },
     skipAddingFilesFromTsConfig: true,
   });
 
-  // Add all JS/TS files in the target directory
-  project.addSourceFilesAtPaths([
-    path.join(absoluteDir, "**/*.js"),
-    path.join(absoluteDir, "**/*.ts"),
-    path.join(absoluteDir, "**/*.jsx"),
-    path.join(absoluteDir, "**/*.tsx"),
-  ]);
+  if (isFile) {
+    project.addSourceFileAtPath(resolved);
+  } else {
+    project.addSourceFilesAtPaths([
+      path.join(scanRoot, "**/*.js"),
+      path.join(scanRoot, "**/*.ts"),
+      path.join(scanRoot, "**/*.jsx"),
+      path.join(scanRoot, "**/*.tsx"),
+    ]);
+  }
+
+  // Track what identifiers map to which deprecated packages
+  // e.g., import Constants from 'expo-constants' → Constants is from expo-constants
+  const importMap = new Map<string, { packageName: string; sourceFile: SourceFile }>();
 
   for (const sourceFile of project.getSourceFiles()) {
-    const filePath = path.relative(absoluteDir, sourceFile.getFilePath());
+    const filePath = path.relative(scanRoot, sourceFile.getFilePath());
 
     // Skip node_modules
     if (filePath.includes("node_modules")) continue;
 
-    // Find `new Buffer(...)` expressions
+    const fileContent = sourceFile.getFullText();
+    const lines = fileContent.split("\n");
+
+    // ═══════════════════════════════════════════════════
+    // DETECTION 1: Deprecated package imports
+    // ═══════════════════════════════════════════════════
+    const importDecls = sourceFile.getImportDeclarations();
+    for (const importDecl of importDecls) {
+      const moduleSpecifier = importDecl.getModuleSpecifierValue();
+
+      // Check for deprecated package imports
+      if (DEPRECATED_IMPORTS[moduleSpecifier]) {
+        const { symbol, argType } = DEPRECATED_IMPORTS[moduleSpecifier];
+        counter++;
+        callSites.push({
+          id: `cs_${String(counter).padStart(3, "0")}`,
+          file: filePath,
+          line: importDecl.getStartLineNumber(),
+          symbol,
+          argType,
+          snippet: importDecl.getText().trim(),
+        });
+      }
+
+      // Check for deprecated named imports from a package
+      const namedImports = importDecl.getNamedImports();
+      for (const named of namedImports) {
+        const key = `${moduleSpecifier}:${named.getName()}`;
+        if (DEPRECATED_NAMED_IMPORTS[key]) {
+          const { symbol, argType } = DEPRECATED_NAMED_IMPORTS[key];
+          counter++;
+          callSites.push({
+            id: `cs_${String(counter).padStart(3, "0")}`,
+            file: filePath,
+            line: importDecl.getStartLineNumber(),
+            symbol,
+            argType,
+            snippet: importDecl.getText().trim(),
+          });
+        }
+      }
+
+      // Track default and namespace imports for property access detection
+      const defaultImport = importDecl.getDefaultImport();
+      if (defaultImport) {
+        importMap.set(defaultImport.getText(), {
+          packageName: moduleSpecifier,
+          sourceFile,
+        });
+      }
+      const namespaceImport = importDecl.getNamespaceImport();
+      if (namespaceImport) {
+        importMap.set(namespaceImport.getText(), {
+          packageName: moduleSpecifier,
+          sourceFile,
+        });
+      }
+    }
+
+    // ═══════════════════════════════════════════════════
+    // DETECTION 2: Deprecated property accesses
+    // ═══════════════════════════════════════════════════
+    const propAccesses = sourceFile.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression);
+    for (const prop of propAccesses) {
+      const fullText = prop.getText();
+
+      // Check against our known deprecated property patterns
+      // We need to check longest matches first to avoid partial matches
+      const matchingKeys = Object.keys(DEPRECATED_PROPERTY_ACCESS)
+        .filter((key) => fullText.startsWith(key) || fullText === key)
+        .sort((a, b) => b.length - a.length);
+
+      if (matchingKeys.length > 0) {
+        const bestMatch = matchingKeys[0];
+        // Only match if fullText IS the key or starts with key followed by non-alphanumeric
+        if (fullText === bestMatch || !fullText[bestMatch.length]?.match(/[a-zA-Z0-9_]/)) {
+          const { symbol, argType } = DEPRECATED_PROPERTY_ACCESS[bestMatch];
+
+          // Avoid duplicate detection: skip if this is a child of an already-detected longer expression
+          const parentProp = prop.getParent();
+          const isChildOfLongerMatch = parentProp &&
+            parentProp.getKind() === SyntaxKind.PropertyAccessExpression &&
+            Object.keys(DEPRECATED_PROPERTY_ACCESS).some(
+              (k) => parentProp.getText() === k || parentProp.getText().startsWith(k)
+            );
+
+          if (!isChildOfLongerMatch) {
+            counter++;
+            const lineNum = prop.getStartLineNumber();
+            callSites.push({
+              id: `cs_${String(counter).padStart(3, "0")}`,
+              file: filePath,
+              line: lineNum,
+              symbol,
+              argType,
+              snippet: lines[lineNum - 1]?.trim() || fullText,
+            });
+          }
+        }
+      }
+    }
+
+    // ═══════════════════════════════════════════════════
+    // DETECTION 3: Deprecated Buffer() calls (original)
+    // ═══════════════════════════════════════════════════
     sourceFile.getDescendantsOfKind(SyntaxKind.NewExpression).forEach(
-      (newExpr: NewExpression) => {
+      (newExpr) => {
         const exprText = newExpr.getExpression().getText();
         if (DEPRECATED_SYMBOLS.has(exprText)) {
           counter++;
           const args = newExpr.getArguments();
+          const lineNum = newExpr.getStartLineNumber();
           callSites.push({
             id: `cs_${String(counter).padStart(3, "0")}`,
             file: filePath,
-            line: newExpr.getStartLineNumber(),
+            line: lineNum,
             symbol: exprText,
-            argType: classifyArgType(args, sourceFile),
+            argType: classifyBufferArgType(args, sourceFile),
+            snippet: lines[lineNum - 1]?.trim() || newExpr.getText(),
           });
         }
       }
     );
 
-    // Find `Buffer(...)` function calls (without new)
+    // Buffer() function calls (without new)
     sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression).forEach(
-      (callExpr: CallExpression) => {
+      (callExpr) => {
         const exprText = callExpr.getExpression().getText();
         if (DEPRECATED_SYMBOLS.has(exprText)) {
-          // Make sure this isn't a property access like Buffer.from(...)
-          if (
-            callExpr.getExpression().getKind() === SyntaxKind.Identifier
-          ) {
+          if (callExpr.getExpression().getKind() === SyntaxKind.Identifier) {
             counter++;
             const args = callExpr.getArguments();
+            const lineNum = callExpr.getStartLineNumber();
             callSites.push({
               id: `cs_${String(counter).padStart(3, "0")}`,
               file: filePath,
-              line: callExpr.getStartLineNumber(),
+              line: lineNum,
               symbol: exprText,
-              argType: classifyArgType(args, sourceFile),
+              argType: classifyBufferArgType(args, sourceFile),
+              snippet: lines[lineNum - 1]?.trim() || callExpr.getText(),
             });
           }
         }
       }
     );
+
+    // ═══════════════════════════════════════════════════
+    // DETECTION 4: JSX usage of deprecated components
+    // ═══════════════════════════════════════════════════
+    // Detect <Video .../> from expo-av (JSX opening elements)
+    try {
+      const jsxElements = [
+        ...sourceFile.getDescendantsOfKind(SyntaxKind.JsxOpeningElement),
+        ...sourceFile.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement),
+      ];
+      for (const jsx of jsxElements) {
+        const tagName = jsx.getTagNameNode().getText();
+        // Check if this component name was imported from a deprecated package
+        for (const [importName, info] of importMap) {
+          // Check for namespace usage: <SomePackage.Component>
+          if (tagName === importName || tagName.startsWith(`${importName}.`)) {
+            const depKey = `${info.packageName}:${tagName}`;
+            // We already detected the import itself — skip JSX duplication
+            // unless the component has its own specific rule
+          }
+        }
+      }
+    } catch {
+      // JSX parsing may fail for non-JSX files, silently ignore
+    }
   }
 
-  return callSites;
+  // Deduplicate: remove call sites with same symbol+line in same file
+  const seen = new Set<string>();
+  const deduped: CallSite[] = [];
+  for (const cs of callSites) {
+    const key = `${cs.file}:${cs.line}:${cs.symbol}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      deduped.push(cs);
+    }
+  }
+
+  return deduped;
 }

@@ -32,7 +32,7 @@ export class RulesCache {
         symbol TEXT NOT NULL,
         argType TEXT NOT NULL,
         newExpression TEXT NOT NULL,
-        transformType TEXT NOT NULL CHECK(transformType IN ('deterministic', 'requires_llm')),
+        transformType TEXT NOT NULL CHECK(transformType IN ('deterministic', 'requires_llm', 'manual')),
         source TEXT NOT NULL,
         confidenceHistory REAL NOT NULL DEFAULT 0,
         PRIMARY KEY (symbol, argType)

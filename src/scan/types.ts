@@ -8,10 +8,12 @@ export interface CallSite {
   file: string;
   /** Line number where the deprecated usage occurs */
   line: number;
-  /** The deprecated symbol name, e.g. "Buffer" */
+  /** The deprecated symbol name, e.g. "Buffer" or "expo-av" */
   symbol: string;
-  /** Classification of the argument passed to the deprecated API */
-  argType: "number_literal" | "string_literal" | "array_local_inferred" | "unresolvable";
+  /** Classification of the deprecated usage */
+  argType: string;
+  /** The original source code snippet at this call site */
+  snippet?: string;
 }
 
 /**
@@ -24,8 +26,8 @@ export interface RuleCacheEntry {
   argType: string;
   /** Template expression for the replacement, e.g. "Buffer.alloc({0})" */
   newExpression: string;
-  /** Whether this rule can be applied deterministically or requires LLM assistance */
-  transformType: "deterministic" | "requires_llm";
+  /** Whether this rule can be applied deterministically, requires LLM, or is manual review */
+  transformType: "deterministic" | "requires_llm" | "manual";
   /** Source of the deprecation info, e.g. "Node DEP0005" */
   source: string;
   /** Rolling average confidence from past uses, 0 if unused */

@@ -22,5 +22,445 @@
     "transformType": "deterministic",
     "source": "Node DEP0005",
     "confidenceHistory": 0.90
+  },
+  {
+    "symbol": "expo-av",
+    "argType": "package_import",
+    "newExpression": "expo-video or expo-audio",
+    "transformType": "manual",
+    "source": "Expo SDK 54+",
+    "confidenceHistory": 0.99
+  },
+  {
+    "symbol": "expo-av.Video",
+    "argType": "component",
+    "newExpression": "expo-video",
+    "transformType": "manual",
+    "source": "Expo SDK 54+",
+    "confidenceHistory": 0.99
+  },
+  {
+    "symbol": "expo-av.Audio",
+    "argType": "api",
+    "newExpression": "expo-audio",
+    "transformType": "manual",
+    "source": "Expo SDK 54+",
+    "confidenceHistory": 0.99
+  },
+  {
+    "symbol": "expo-barcode-scanner",
+    "argType": "package_import",
+    "newExpression": "expo-camera",
+    "transformType": "manual",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.98
+  },
+  {
+    "symbol": "expo-face-detector",
+    "argType": "package_import",
+    "newExpression": "react-native-vision-camera",
+    "transformType": "manual",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.95
+  },
+  {
+    "symbol": "expo-background-fetch",
+    "argType": "package_import",
+    "newExpression": "expo-background-task",
+    "transformType": "manual",
+    "source": "Expo SDK 53+",
+    "confidenceHistory": 0.98
+  },
+  {
+    "symbol": "__expo.global",
+    "argType": "global_object",
+    "newExpression": "import from specific expo packages (e.g., expo-constants)",
+    "transformType": "manual",
+    "source": "Expo SDK 41+",
+    "confidenceHistory": 0.95
+  },
+  {
+    "symbol": "Expo.global",
+    "argType": "global_object",
+    "newExpression": "import from specific expo packages",
+    "transformType": "manual",
+    "source": "Expo SDK 41+",
+    "confidenceHistory": 0.95
+  },
+  {
+    "symbol": ".expo.js file extension",
+    "argType": "file_extension",
+    "newExpression": "try/catch require() for optional imports",
+    "transformType": "manual",
+    "source": "Expo SDK 41+",
+    "confidenceHistory": 0.93
+  },
+  {
+    "symbol": "expo-cli (global install)",
+    "argType": "cli_tool",
+    "newExpression": "npx expo (local CLI)",
+    "transformType": "deterministic",
+    "source": "Expo 2026",
+    "confidenceHistory": 0.98
+  },
+  {
+    "symbol": "expo eject",
+    "argType": "command",
+    "newExpression": "npx expo prebuild",
+    "transformType": "deterministic",
+    "source": "Expo SDK 46+",
+    "confidenceHistory": 0.99
+  },
+  {
+    "symbol": "Webpack (Expo CLI)",
+    "argType": "bundler",
+    "newExpression": "Metro bundler (Expo Router)",
+    "transformType": "manual",
+    "source": "Expo SDK 50+",
+    "confidenceHistory": 0.97
+  },
+  {
+    "symbol": "Constants.installationId",
+    "argType": "property",
+    "newExpression": "use expo-constants with different method or generate UUID",
+    "transformType": "manual",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.95
+  },
+  {
+    "symbol": "Constants.isDevice",
+    "argType": "property",
+    "newExpression": "use expo-device to detect device type",
+    "transformType": "manual",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.95
+  },
+  {
+    "symbol": "Constants.nativeAppVersion",
+    "argType": "property",
+    "newExpression": "expo-application.Application.nativeApplicationVersion",
+    "transformType": "manual",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.96
+  },
+  {
+    "symbol": "Constants.nativeBuildVersion",
+    "argType": "property",
+    "newExpression": "expo-application.Application.nativeBuildVersion",
+    "transformType": "manual",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.96
+  },
+  {
+    "symbol": "Constants.platform.platform",
+    "argType": "property",
+    "newExpression": "expo-device.Device.modelId",
+    "transformType": "manual",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.94
+  },
+  {
+    "symbol": "Constants.platform.systemVersion",
+    "argType": "property",
+    "newExpression": "expo-device.Device.osVersion",
+    "transformType": "manual",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.94
+  },
+  {
+    "symbol": "Constants.platform.userInterfaceIdiom",
+    "argType": "property",
+    "newExpression": "expo-device.Device.getDeviceTypeAsync()",
+    "transformType": "manual",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.94
+  },
+  {
+    "symbol": "Constants.deviceYearClass",
+    "argType": "property",
+    "newExpression": "expo-device.Device.deviceYearClass",
+    "transformType": "manual",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.95
+  },
+  {
+    "symbol": "Constants.IOSManifest.model",
+    "argType": "property",
+    "newExpression": "expo-device.Device.modelName",
+    "transformType": "manual",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.94
+  },
+  {
+    "symbol": "Constants.IOSManifest.platform",
+    "argType": "property",
+    "newExpression": "expo-device.Device.modelId",
+    "transformType": "manual",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.94
+  },
+  {
+    "symbol": "Constants.IOSManifest.systemVersion",
+    "argType": "property",
+    "newExpression": "expo-device.Device.osVersion",
+    "transformType": "manual",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.94
+  },
+  {
+    "symbol": "Constants.IOSManifest.userInterfaceIdiom",
+    "argType": "property",
+    "newExpression": "expo-device.Device.getDeviceTypeAsync()",
+    "transformType": "manual",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.94
+  },
+  {
+    "symbol": "Constants.AndroidManifest.versionCode",
+    "argType": "property",
+    "newExpression": "expo-application.Application.nativeBuildVersion",
+    "transformType": "manual",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.96
+  },
+  {
+    "symbol": "expo-status-bar.backgroundColor",
+    "argType": "prop",
+    "newExpression": "use edge-to-edge layout or alternative system bar APIs",
+    "transformType": "manual",
+    "source": "Expo SDK 55+",
+    "confidenceHistory": 0.92
+  },
+  {
+    "symbol": "expo-status-bar.translucent",
+    "argType": "prop",
+    "newExpression": "use edge-to-edge layout",
+    "transformType": "manual",
+    "source": "Expo SDK 55+",
+    "confidenceHistory": 0.92
+  },
+  {
+    "symbol": "expo-status-bar.networkActivityIndicatorVisible",
+    "argType": "prop",
+    "newExpression": "implement custom network indicator",
+    "transformType": "manual",
+    "source": "Expo SDK 55+",
+    "confidenceHistory": 0.90
+  },
+  {
+    "symbol": "expo-navigation-bar.getBackgroundColorAsync",
+    "argType": "function",
+    "newExpression": "use edge-to-edge layout APIs",
+    "transformType": "manual",
+    "source": "Expo SDK 55+",
+    "confidenceHistory": 0.92
+  },
+  {
+    "symbol": "expo-navigation-bar.setBackgroundColorAsync",
+    "argType": "function",
+    "newExpression": "use edge-to-edge layout APIs",
+    "transformType": "manual",
+    "source": "Expo SDK 55+",
+    "confidenceHistory": 0.92
+  },
+  {
+    "symbol": "expo-navigation-bar.getBorderColorAsync",
+    "argType": "function",
+    "newExpression": "use edge-to-edge layout APIs",
+    "transformType": "manual",
+    "source": "Expo SDK 55+",
+    "confidenceHistory": 0.92
+  },
+  {
+    "symbol": "expo-navigation-bar.setBorderColorAsync",
+    "argType": "function",
+    "newExpression": "use edge-to-edge layout APIs",
+    "transformType": "manual",
+    "source": "Expo SDK 55+",
+    "confidenceHistory": 0.92
+  },
+  {
+    "symbol": "expo-navigation-bar.getBehaviorAsync",
+    "argType": "function",
+    "newExpression": "use edge-to-edge layout APIs",
+    "transformType": "manual",
+    "source": "Expo SDK 55+",
+    "confidenceHistory": 0.92
+  },
+  {
+    "symbol": "expo-navigation-bar.setBehaviorAsync",
+    "argType": "function",
+    "newExpression": "use edge-to-edge layout APIs",
+    "transformType": "manual",
+    "source": "Expo SDK 55+",
+    "confidenceHistory": 0.92
+  },
+  {
+    "symbol": "expo-navigation-bar.setPositionAsync",
+    "argType": "function",
+    "newExpression": "use edge-to-edge layout APIs",
+    "transformType": "manual",
+    "source": "Expo SDK 55+",
+    "confidenceHistory": 0.92
+  },
+  {
+    "symbol": "expo-navigation-bar.unstable_getPositionAsync",
+    "argType": "function",
+    "newExpression": "use edge-to-edge layout APIs",
+    "transformType": "manual",
+    "source": "Expo SDK 55+",
+    "confidenceHistory": 0.90
+  },
+  {
+    "symbol": "expo-navigation-bar.getButtonStyleAsync",
+    "argType": "function",
+    "newExpression": "use edge-to-edge layout APIs",
+    "transformType": "manual",
+    "source": "Expo SDK 55+",
+    "confidenceHistory": 0.92
+  },
+  {
+    "symbol": "expo-clipboard.removeClipboardListener",
+    "argType": "function",
+    "newExpression": "use updated clipboard API or manage listeners differently",
+    "transformType": "manual",
+    "source": "Expo SDK 55+",
+    "confidenceHistory": 0.93
+  },
+  {
+    "symbol": "expo-media-library.removeSubscription",
+    "argType": "function",
+    "newExpression": "use updated media library API",
+    "transformType": "manual",
+    "source": "Expo SDK 55+",
+    "confidenceHistory": 0.93
+  },
+  {
+    "symbol": "expo-screen-capture.removeScreenshotListener",
+    "argType": "function",
+    "newExpression": "use updated screen capture API",
+    "transformType": "manual",
+    "source": "Expo SDK 55+",
+    "confidenceHistory": 0.93
+  },
+  {
+    "symbol": "expo-screen-orientation.removeOrientationChangeListeners",
+    "argType": "function",
+    "newExpression": "use updated screen orientation API",
+    "transformType": "manual",
+    "source": "Expo SDK 55+",
+    "confidenceHistory": 0.93
+  },
+  {
+    "symbol": "expo-screen-orientation.removeOrientationChangeListener",
+    "argType": "function",
+    "newExpression": "use updated screen orientation API",
+    "transformType": "manual",
+    "source": "Expo SDK 55+",
+    "confidenceHistory": 0.93
+  },
+  {
+    "symbol": "react-native-iap",
+    "argType": "package_import",
+    "newExpression": "expo-iap",
+    "transformType": "manual",
+    "source": "react-native-iap v13+",
+    "confidenceHistory": 0.95
+  },
+  {
+    "symbol": "expo-auth-session.expoClientId",
+    "argType": "field",
+    "newExpression": "remove or use alternative auth proxy configuration",
+    "transformType": "manual",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.95
+  },
+  {
+    "symbol": "expo-sqlite/next import",
+    "argType": "import_path",
+    "newExpression": "expo-sqlite (default import)",
+    "transformType": "manual",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.94
+  },
+  {
+    "symbol": "expo-sqlite/legacy import",
+    "argType": "import_path",
+    "newExpression": "expo-sqlite (default import) with refactored API",
+    "transformType": "manual",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.94
+  },
+  {
+    "symbol": "expo-local-authentication.SecurityLevel.BIOMETRIC",
+    "argType": "enum_value",
+    "newExpression": "SecurityLevel.BIOMETRIC_STRONG or SecurityLevel.BIOMETRIC_WEAK",
+    "transformType": "manual",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.93
+  },
+  {
+    "symbol": "expo-location.getPermissionsAsync (web)",
+    "argType": "function",
+    "newExpression": "navigator.permissions.query (web only)",
+    "transformType": "manual",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.94
+  },
+  {
+    "symbol": "expo-sms.sendSMSAsync error code E_SMS_UNAVAILABLE",
+    "argType": "error_code",
+    "newExpression": "ERR_UNAVAILABLE",
+    "transformType": "manual",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.95
+  },
+  {
+    "symbol": "expo-modules-core.ReactNativeHostHandler.onRegisterJSIModules",
+    "argType": "interface",
+    "newExpression": "use alternative JSI registration method",
+    "transformType": "manual",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.93
+  },
+  {
+    "symbol": "EXPO_TARGET environment variable",
+    "argType": "env_var",
+    "newExpression": "use optional imports with try/catch or Constants.executionEnvironment",
+    "transformType": "manual",
+    "source": "Expo SDK 41+",
+    "confidenceHistory": 0.92
+  },
+  {
+    "symbol": "--target flag (expo publish/export)",
+    "argType": "cli_flag",
+    "newExpression": "use optional imports with try/catch or Constants.executionEnvironment",
+    "transformType": "manual",
+    "source": "Expo SDK 41+",
+    "confidenceHistory": 0.92
+  },
+  {
+    "symbol": "Expo Go - Push Notifications",
+    "argType": "feature_support",
+    "newExpression": "use development builds for push notification testing",
+    "transformType": "manual",
+    "source": "Expo SDK 53+",
+    "confidenceHistory": 0.97
+  },
+  {
+    "symbol": "Expo Go - Google Maps",
+    "argType": "feature_support",
+    "newExpression": "use development builds for Google Maps testing",
+    "transformType": "manual",
+    "source": "Expo SDK 53+",
+    "confidenceHistory": 0.97
+  },
+  {
+    "symbol": "Legacy React Native Architecture (Paper)",
+    "argType": "architecture",
+    "newExpression": "React Native New Architecture (Fabric, TurboModules)",
+    "transformType": "manual",
+    "source": "React Native 0.82+",
+    "confidenceHistory": 0.98
   }
 ]

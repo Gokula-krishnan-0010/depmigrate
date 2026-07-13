@@ -45,12 +45,11 @@ function buildMarkdownReport(data: ReportData): string {
   // Header
   lines.push("# DepMigrate — Migration Report");
   lines.push("");
-  lines.push(`**Target:** ${data.scanTarget}`);
+  lines.push(`**Target:** \`${data.scanTarget}\``);
   lines.push(`**Generated:** ${data.timestamp}`);
   lines.push(`**Call sites found:** ${data.callSites.length}`);
-  lines.push(
-    `**Migrations applied:** ${data.codemods.length}`
-  );
+  lines.push(`**Migrations applied:** ${data.codemods.filter(c => !isManualMigration(c)).length}`);
+  lines.push(`**Manual reviews needed:** ${data.codemods.filter(c => isManualMigration(c)).length}`);
   lines.push("");
 
   // Overall confidence
@@ -65,71 +64,127 @@ function buildMarkdownReport(data: ReportData): string {
   // Summary table
   lines.push("## Summary");
   lines.push("");
-  lines.push("| ID | File | Line | Symbol | Arg Type | Method | Confidence |");
+  lines.push("| ID | File | Line | Deprecated Symbol | Type | Method | Replacement |");
   lines.push("|---|---|---|---|---|---|---|");
 
   for (const cs of data.callSites) {
     const codemod = data.codemods.find((c) => c.callSiteId === cs.id);
-    const score = data.scores.find((s) => s.callSiteId === cs.id);
     const method = codemod
-      ? codemod.usedLlm
-        ? "LLM"
-        : "Deterministic"
+      ? isManualMigration(codemod)
+        ? "📋 Manual"
+        : codemod.usedLlm
+          ? "⚡ LLM"
+          : "✓ Deterministic"
       : "—";
-    const conf = score ? `${(score.overall * 100).toFixed(0)}%` : "—";
+    const replacement = codemod ? truncate(codemod.newCode, 50) : "—";
     lines.push(
-      `| ${cs.id} | ${cs.file} | ${cs.line} | ${cs.symbol} | ${cs.argType} | ${method} | ${conf} |`
+      `| ${cs.id} | ${cs.file} | ${cs.line} | \`${cs.symbol}\` | ${cs.argType} | ${method} | ${replacement} |`
     );
   }
   lines.push("");
 
-  // Per-change details
-  lines.push("## Change Details");
-  lines.push("");
-
-  for (const cs of data.callSites) {
-    const codemod = data.codemods.find((c) => c.callSiteId === cs.id);
-    const verification = data.verifications.find(
-      (v) => v.callSiteId === cs.id
-    );
-    const score = data.scores.find((s) => s.callSiteId === cs.id);
-
-    lines.push(`### ${cs.id} — ${cs.file}:${cs.line}`);
+  // Separate manual migrations section
+  const manualCodemods = data.codemods.filter(c => isManualMigration(c));
+  if (manualCodemods.length > 0) {
+    lines.push("## 📋 Manual Migrations Required");
+    lines.push("");
+    lines.push("The following deprecated APIs were detected and require manual code changes.");
+    lines.push("Each item lists the deprecated usage and its recommended replacement.");
     lines.push("");
 
-    if (codemod) {
+    // Group by source for cleaner output
+    const bySource = new Map<string, { cs: CallSite; cm: CodemodResult; score?: ConfidenceScore }[]>();
+    for (const cm of manualCodemods) {
+      const cs = data.callSites.find(c => c.id === cm.callSiteId)!;
+      const score = data.scores.find(s => s.callSiteId === cm.callSiteId);
+      // Extract source from rationale
+      const sourceMatch = cm.rationale.match(/\(([^)]+)\)/);
+      const source = sourceMatch ? sourceMatch[1] : "Unknown";
+      const existing = bySource.get(source) || [];
+      existing.push({ cs, cm, score });
+      bySource.set(source, existing);
+    }
+
+    for (const [source, items] of bySource) {
+      lines.push(`### ${source}`);
+      lines.push("");
+
+      for (const { cs, cm, score } of items) {
+        lines.push(`#### ${cs.id} — \`${cs.symbol}\``);
+        lines.push("");
+        lines.push(`- **File:** \`${cs.file}:${cs.line}\``);
+        if (cs.snippet) {
+          lines.push(`- **Current code:**`);
+          lines.push("  ```js");
+          lines.push(`  ${cs.snippet}`);
+          lines.push("  ```");
+        }
+        lines.push(`- **Replace with:** ${cm.newCode}`);
+        lines.push(`- **Rationale:** ${cm.rationale}`);
+        lines.push("");
+      }
+    }
+  }
+
+  // Auto-applied changes section
+  const autoCodemods = data.codemods.filter(c => !isManualMigration(c));
+  if (autoCodemods.length > 0) {
+    lines.push("## ✓ Auto-Applied Changes");
+    lines.push("");
+
+    for (const cm of autoCodemods) {
+      const cs = data.callSites.find(c => c.id === cm.callSiteId)!;
+      const score = data.scores.find((s) => s.callSiteId === cm.callSiteId);
+
+      lines.push(`### ${cs.id} — ${cs.file}:${cs.line}`);
+      lines.push("");
       lines.push("**Before:**");
       lines.push("```js");
-      lines.push(codemod.originalCode);
+      lines.push(cm.originalCode);
       lines.push("```");
       lines.push("");
       lines.push("**After:**");
       lines.push("```js");
-      lines.push(codemod.newCode);
+      lines.push(cm.newCode);
       lines.push("```");
       lines.push("");
-      lines.push(`**Rationale:** ${codemod.rationale}`);
-      lines.push("");
-    }
-
-    if (score) {
-      lines.push("**Evidence:**");
-      for (const e of score.evidence) {
-        lines.push(`- ${e}`);
-      }
+      lines.push(`**Rationale:** ${cm.rationale}`);
       lines.push("");
 
-      if (score.overall < 0.5) {
-        lines.push(
-          `> ⚠️ **Manual review required** — confidence ${(score.overall * 100).toFixed(0)}% is below threshold`
-        );
+      if (score) {
+        lines.push("**Evidence:**");
+        for (const e of score.evidence) {
+          lines.push(`- ${e}`);
+        }
         lines.push("");
-      }
-    }
 
-    lines.push("---");
-    lines.push("");
+        if (score.overall < 0.5) {
+          lines.push(
+            `> ⚠️ **Manual review required** — confidence ${(score.overall * 100).toFixed(0)}% is below threshold`
+          );
+          lines.push("");
+        }
+      }
+
+      lines.push("---");
+      lines.push("");
+    }
   }
 
   return lines.join("\n");
+}
+
+/**
+ * Check if a codemod result represents a manual migration (not auto-applied).
+ */
+function isManualMigration(codemod: CodemodResult): boolean {
+  return codemod.rationale.includes("Manual migration required");
+}
+
+/**
+ * Truncate a string to a given max length.
+ */
+function truncate(str: string, maxLen: number): string {
+  if (str.length <= maxLen) return str;
+  return str.substring(0, maxLen - 3) + "...";
 }
