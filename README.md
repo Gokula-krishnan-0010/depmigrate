@@ -1,160 +1,128 @@
+# DepMigrate
+
 ```text
 ██████╗ ███████╗██████╗ ███╗   ███╗██╗ ██████╗ ██████╗  █████╗ ████████╗███████╗
 ██╔══██╗██╔════╝██╔══██╗████╗ ████║██║██╔════╝ ██╔══██╗██╔══██╗╚══██╔══╝██╔════╝
-██║  ██║█████╗  ██████╔╝██╔████╔██║██║██║  ███╗██████╔╝███████║   ██║   █████╗
-██║  ██║██╔══╝  ██╔═══╝ ██║╚██╔╝██║██║██║   ██║██╔══██╗██╔══██║   ██║   ██╔══╝
+██║  ██║█████╗  ██████╔╝██╔████╔██║██║██║  ███╗██████╔╝███████║   ██║   █████╗  
+██║  ██║██╔══╝  ██╔═══╝ ██║╚██╔╝██║██║██║   ██║██╔══██╗██╔══██║   ██║   ██╔══╝  
 ██████╔╝███████╗██║     ██║ ╚═╝ ██║██║╚██████╔╝██║  ██║██║  ██║   ██║   ███████╗
 ╚═════╝ ╚══════╝╚═╝     ╚═╝     ╚═╝╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚══════╝
 ```
 
-A robust CLI tool designed to automate the detection and migration of deprecated API usage within codebases. By combining deterministic AST-based transformations with advanced LLM-assisted rewriting, DepMigrate ensures safe, context-aware dependency updates with high confidence scores.
+**DepMigrate** is a high-reliability, AST-powered CLI migration assistant designed to detect and upgrade deprecated API usages in your JavaScript and TypeScript codebases. 
+
+DepMigrate combines exact AST pattern matching, a SQLite rules cache, safe deterministic syntax modifications, typechecking/testing validation loops, and LLM-assisted re-writing into an explainable trust layer. It supports Node.js (e.g., `Buffer` construct deprecations) and a comprehensive set of Expo / React Native API and import updates.
+
+---
 
 ## 🚀 Features
 
-- **Multi-Stage Pipeline**: Integrates AST scanning, rules cache lookup, deterministic transformation, LLM rewriting, semantic diff analysis, and comprehensive verification.
+- **AST-Based Precision Scanning**: Powered by `ts-morph` to identify precise call sites, import declarations, JSX components, and property accesses (no regular expression guessing).
 - **Hybrid Transformation Engine**:
-  - **Deterministic**: Pattern-based replacements for stable API migrations.
-  - **LLM-Assisted**: Smart rewriting for complex API updates using Claude models.
-- **Semantic Validation**:
-  - **Semantic Diff**: Detects non-API surface changes between original and migrated code.
-  - **Typechecking**: Runs `tsc` to ensure type correctness.
-  - **Test Execution**: Runs test suites via `npm test` to validate behavior.
-- **Confidence Scoring**: Calculates migration confidence based on:
-  - AST pattern match depth
-  - LLM self-assessment
-  - Typecheck status
-  - Test pass/fail
-  - Semantic stability
-- **Rules Cache**: Persistent SQLite database (`rules.db`) to cache API mappings and optimize deterministic transformations.
-- **Rich Output**: Generates detailed migration reports with call site analysis, confidence scores, and verification results.
+  - **Deterministic**: Instant, type-safe replacements for stable mappings (e.g., `new Buffer(x)` ➔ `Buffer.from(x)`).
+  - **LLM-Assisted Rewriting**: Claude (Anthropic API) integration for ambiguous or structurally complex migrations.
+  - **Manual Guidance Reporting**: Reports and groups deprecated dependencies that cannot be safely automated (e.g., Expo package changes requiring manual setup).
+- **Dual-Mode Target Support**: Supports scanning entire project directories or targeting a single source file directly.
+- **Verification Loop**: 
+  - Validates AST transformations using semantic diffs to ensure only API boundaries are changed.
+  - Runs typechecks (`tsc --noEmit`) and project tests (`vitest` or `npm test`) on applied changes.
+- **Explainable Confidence Scorer**: Scores migrations dynamically based on matching type, verification status, and historical accuracy.
+- **Feedback & Rule Learning**: Write confirmed LLM migrations back to the persistent SQLite rules cache via `confirm` commands.
 
-## 📦 Installation
+---
 
+## 📦 Installation & Setup
+
+### Prerequisites
+- Node.js 18+ (Node 20+ recommended)
+- Optional: Anthropic API Key (`ANTHROPIC_API_KEY`) for LLM-assisted migrations
+
+### Setup
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd DepMigrate
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Build the source code:
+   ```bash
+   npm run build
+   ```
+
+---
+
+## 💻 CLI Commands
+
+Run the CLI using `npx tsx src/cli.ts` (development) or built scripts via `node dist/cli.js`.
+
+### 1. Scan and Migrate (`scan`)
+Scan a directory or file, find deprecations, apply deterministic or LLM-assisted changes, and run validations.
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd DepMigrate
+# Scan a directory or single file (Dry Run - Recommended first step)
+npx tsx src/cli.ts scan ./fixtures/demo-repo/src/test-gk.js --dry-run
 
-# Install dependencies
-npm install
-
-# Build the project (if TypeScript is used)
-npm run build
+# Scan and apply changes (Mutates files)
+npx tsx src/cli.ts scan ./fixtures/demo-repo/src/parser.js
 ```
 
-## 💻 Usage
-
-The primary command is `depmigrate scan`, which executes the end-to-end migration pipeline.
-
-### Basic Usage
-
+### 2. Confirm LLM Migrations (`confirm`)
+Saves a verified LLM-derived migration back into the local cache so subsequent matches execute deterministically.
 ```bash
-npx depmigrate scan <target-directory>
+npx tsx src/cli.ts confirm cs_004
 ```
 
-**Example:**
+---
 
+## 📂 Project Structure
+
+```text
+├── src/
+│   ├── cli.ts               # Commander CLI orchestrator
+│   ├── scan/
+│   │   ├── types.ts         # Domain models (CallSite, CodemodResult, etc.)
+│   │   └── astScanner.ts    # ts-morph AST scanner for Buffer and Expo
+│   ├── rules/
+│   │   ├── rulesCache.ts    # SQLite rules manager & seed database loader
+│   │   └── seedRules.json   # Seed data for Node & Expo rules
+│   ├── plan/
+│   │   └── executionOrder.ts # Dependency planning/sorting per file
+│   ├── codemod/
+│   │   ├── deterministicApplier.ts # Deterministic AST transforms
+│   │   └── llmRewriter.ts        # Claude API interface for complex re-writes
+│   ├── diff/
+│   │   └── semanticDiff.ts       # AST diffing for verification safety
+│   ├── verify/
+│   │   ├── typecheck.ts     # runs tsc typechecks
+│   │   └── testRunner.ts    # runs project test suite
+│   ├── score/
+│   │   └── confidenceScorer.ts   # Multi-factor confidence evaluation
+│   └── report/
+│       └── reportGenerator.ts    # Markdown and JSON report compiler
+├── tests/                   # 100% covered Vitest unit and integration suites
+└── fixtures/
+    └── demo-repo/           # Reference code targets (parser.js, test-gk.js)
+```
+
+---
+
+## 🧪 Testing and Verification
+
+Run the test suite using Vitest:
 ```bash
-npx depmigrate scan ./src
-```
-
-### Command Options
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `-o, --output <dir>` | Output directory for reports | `./depmigrate-output` |
-| `--dry-run` | Scan only, do not apply changes | `false` |
-| `--api-key <key>` | API key for LLM operations | `ANTHROPIC_API_KEY` env var |
-| `--db <path>` | Path to rules database | `./rules.db` |
-
-### Example Workflow
-
-```bash
-# Scan and apply migrations
-npx depmigrate scan ./my-project
-
-# Dry run for review
-npx depmigrate scan ./my-project --dry-run
-
-# Use custom output directory
-npx depmigrate scan ./my-project --output ./migrations/2026-07-14
-
-# Provide API key via env var (recommended)
-ANTHROPIC_API_KEY='your-api-key' npx depmigrate scan ./my-project
-```
-
-## 📁 Project Structure
-
-```
-src/
-├── astScan/           # AST-based call site detection
-│   └── astScanner.ts
-├── codemod/           # Codemod application logic
-│   ├── deterministicApplier.ts
-│   └── llmRewriter.ts
-├── rules/             # Rule management and caching
-│   ├── rulesCache.ts
-│   └── types.ts
-├── plan/              # Execution planning
-│   └── executionOrder.ts
-├── verify/            # Verification utilities
-│   ├── typecheck.ts
-│   └── testRunner.ts
-├── diff/              # Semantic diff analysis
-│   └── semanticDiff.ts
-└── report/            # Report generation
-    └── reportGenerator.ts
-```
-
-## 🧪 Verification Pipeline
-
-The tool follows a rigorous verification process:
-
-1. **Scan**: Identifies deprecated API calls
-2. **Rule Lookup**: Matches against deterministic rules
-3. **Codemod Application**: Applies deterministic or LLM-assisted changes
-4. **Semantic Diff**: Validates that only API surface was modified
-5. **Typecheck**: Runs `tsc` to ensure type correctness
-6. **Tests**: Executes `npm test` to verify behavior
-
-## 📊 Output
-
-The tool generates detailed reports in the specified output directory, including:
-
-- **Call site analysis**: List of all detected deprecated calls
-- **Rule matching**: Which calls used deterministic rules vs. LLM
-- **Confidence scores**: Per-migration and overall confidence
-- **Verification results**: Typecheck and test outcomes
-- **Semantic diff**: Detected non-API changes
-
-## 🛠️ Development
-
-### Adding New Rules
-
-To add deterministic migration rules, update the `RULES` map in `src/rules/rulesCache.ts`. The map uses a composite key of `symbol + "|" + argType`.
-
-**Example:**
-
-```typescript
-const RULES: Record<string, RuleCacheEntry> = {
-  "oldMethod|string": {
-    symbol: "oldMethod",
-    argType: "string",
-    transformType: "deterministic",
-    newExpression: "newMethod",
-    description: "Replaces oldMethod with newMethod for string arguments"
-  }
-};
-```
-
-### Running Tests
-
-```bash
+# Run all tests once
 npm test
+
+# Run tests in watch mode
+npm run test:watch
 ```
 
-### Building for Production
+The test coverage spans across scanner classification, execution sorting, rules caching, typecheck/test runners, semantic diff validation, and cli command executions.
 
-```bash
-npm run build
-```
+---
+
+## 📖 Detailed Instructions
+
+For detailed walkthroughs, commands, flags, and expected terminal outputs, please refer to the [guide.md](./guide.md) file.
