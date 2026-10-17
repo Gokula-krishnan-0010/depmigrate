@@ -10,27 +10,27 @@
 
 // Case 1: Numeric literal — allocate a fixed-size buffer
 function createFixedBuffer() {
-  const buf = Buffer.alloc(16);
+  const buf = new Buffer(16);
   buf.fill(0);
   return buf;
 }
 
 // Case 2: String literal — encode a known string
 function encodeMessage() {
-  const greeting = Buffer.from("hello world");
+  const greeting = new Buffer("hello world");
   return greeting.toString("base64");
 }
 
 // Case 3: Array (locally inferred) — wrap known byte values
 function wrapBytes() {
   const bytes = [0x48, 0x65, 0x6c, 0x6c, 0x6f];
-  const buf = Buffer.from(bytes);
+  const buf = new Buffer(bytes);
   return buf;
 }
 
 // Case 4: Unresolvable — external parameter, type unknown at analysis time
 function wrapDynamic(userInput) {
-  return Buffer.from(userInput);
+  return new Buffer(userInput);
 }
 
 module.exports = { createFixedBuffer, encodeMessage, wrapBytes, wrapDynamic };

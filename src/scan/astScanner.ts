@@ -14,13 +14,15 @@ const DEPRECATED_SYMBOLS = new Set(["Buffer"]);
  * Maps package specifier → rule symbol used in seedRules.json
  */
 const DEPRECATED_IMPORTS: Record<string, { symbol: string; argType: string }> = {
-  "expo-av":              { symbol: "expo-av",              argType: "package_import" },
-  "expo-barcode-scanner": { symbol: "expo-barcode-scanner", argType: "package_import" },
-  "expo-face-detector":   { symbol: "expo-face-detector",   argType: "package_import" },
-  "expo-background-fetch":{ symbol: "expo-background-fetch",argType: "package_import" },
-  "react-native-iap":     { symbol: "react-native-iap",     argType: "package_import" },
-  "expo-sqlite/next":     { symbol: "expo-sqlite/next import", argType: "import_path" },
-  "expo-sqlite/legacy":   { symbol: "expo-sqlite/legacy import", argType: "import_path" },
+  "expo-av":                { symbol: "expo-av",              argType: "package_import" },
+  "expo-barcode-scanner":   { symbol: "expo-barcode-scanner", argType: "package_import" },
+  "expo-face-detector":     { symbol: "expo-face-detector",   argType: "package_import" },
+  "expo-background-fetch":  { symbol: "expo-background-fetch",argType: "package_import" },
+  "react-native-iap":       { symbol: "react-native-iap",     argType: "package_import" },
+  "expo-sqlite/next":       { symbol: "expo-sqlite/next import", argType: "import_path" },
+  "expo-sqlite/legacy":     { symbol: "expo-sqlite/legacy import", argType: "import_path" },
+  "expo-video-thumbnails":  { symbol: "expo-video-thumbnails", argType: "package_import" },
+  "expo-firebase-core":     { symbol: "expo-firebase-core",   argType: "package_import" },
 };
 
 /**
@@ -28,8 +30,9 @@ const DEPRECATED_IMPORTS: Record<string, { symbol: string; argType: string }> = 
  * Maps "package:namedExport" → rule symbol
  */
 const DEPRECATED_NAMED_IMPORTS: Record<string, { symbol: string; argType: string }> = {
-  "expo-av:Video":  { symbol: "expo-av.Video", argType: "component" },
-  "expo-av:Audio":  { symbol: "expo-av.Audio", argType: "api" },
+  "expo-av:Video":                    { symbol: "expo-av.Video",                argType: "component" },
+  "expo-av:Audio":                    { symbol: "expo-av.Audio",                argType: "api" },
+  "expo-video-thumbnails:VideoThumbnails": { symbol: "VideoThumbnails.getThumbnailAsync", argType: "function" },
 };
 
 /**
@@ -37,6 +40,7 @@ const DEPRECATED_NAMED_IMPORTS: Record<string, { symbol: string; argType: string
  * Maps "ImportedName.property" → rule symbol
  */
 const DEPRECATED_PROPERTY_ACCESS: Record<string, { symbol: string; argType: string }> = {
+  // expo-constants deprecated properties
   "Constants.installationId":    { symbol: "Constants.installationId",    argType: "property" },
   "Constants.isDevice":          { symbol: "Constants.isDevice",          argType: "property" },
   "Constants.nativeAppVersion":  { symbol: "Constants.nativeAppVersion",  argType: "property" },
@@ -50,6 +54,21 @@ const DEPRECATED_PROPERTY_ACCESS: Record<string, { symbol: string; argType: stri
   "Constants.IOSManifest.systemVersion": { symbol: "Constants.IOSManifest.systemVersion", argType: "property" },
   "Constants.IOSManifest.userInterfaceIdiom": { symbol: "Constants.IOSManifest.userInterfaceIdiom", argType: "property" },
   "Constants.AndroidManifest.versionCode": { symbol: "Constants.AndroidManifest.versionCode", argType: "property" },
+  // Deterministic: Constants.manifest → Constants.expoConfig (Expo SDK 50+)
+  "Constants.manifest":          { symbol: "Constants.manifest",          argType: "property" },
+  // Deterministic: Updates.releaseChannel → Updates.channel (EAS Update)
+  "Updates.releaseChannel":      { symbol: "Updates.releaseChannel",      argType: "property" },
+  // Deterministic: StyleSheet.absoluteFill → StyleSheet.absoluteFillObject (RN 0.85+)
+  "StyleSheet.absoluteFill":     { symbol: "StyleSheet.absoluteFill",     argType: "property" },
+  // Deterministic: expo-localization deprecated sync properties (Expo SDK 51+)
+  "Localization.isRTL":          { symbol: "expo-localization.isRTL",     argType: "property" },
+  "Localization.locale":         { symbol: "expo-localization.locale",    argType: "property" },
+  "Localization.currency":       { symbol: "expo-localization.currency",  argType: "property" },
+  "Localization.region":         { symbol: "expo-localization.region",    argType: "property" },
+  "Localization.timezone":       { symbol: "expo-localization.timezone",  argType: "property" },
+  // Deterministic: expo-cellular deprecated sync properties (Expo SDK 51+)
+  "Cellular.allowsVoip":         { symbol: "expo-cellular.allowsVoip",   argType: "function" },
+  "Cellular.carrier":            { symbol: "expo-cellular.carrier",      argType: "function" },
 };
 
 /**

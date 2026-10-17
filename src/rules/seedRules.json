@@ -462,5 +462,157 @@
     "transformType": "manual",
     "source": "React Native 0.82+",
     "confidenceHistory": 0.98
+  },
+  {
+    "symbol": "Constants.manifest",
+    "argType": "property",
+    "newExpression": "Constants.expoConfig",
+    "transformType": "deterministic",
+    "source": "Expo SDK 50+",
+    "confidenceHistory": 0.99
+  },
+  {
+    "symbol": "expo publish",
+    "argType": "command",
+    "newExpression": "eas update --channel <channel> --message <message>",
+    "transformType": "manual",
+    "source": "EAS Update (Classic Updates deprecated in SDK 49)",
+    "confidenceHistory": 0.98
+  },
+  {
+    "symbol": "Updates.releaseChannel",
+    "argType": "property",
+    "newExpression": "Updates.channel",
+    "transformType": "deterministic",
+    "source": "EAS Update (Classic Updates deprecated in SDK 49)",
+    "confidenceHistory": 0.99
+  },
+  {
+    "symbol": "expo-video-thumbnails",
+    "argType": "package_import",
+    "newExpression": "expo-video (generateThumbnailsAsync)",
+    "transformType": "manual",
+    "source": "Expo SDK 56+ (removal in SDK 56)",
+    "confidenceHistory": 0.95
+  },
+  {
+    "symbol": "VideoThumbnails.getThumbnailAsync",
+    "argType": "function",
+    "newExpression": "expo-video.generateThumbnailsAsync",
+    "transformType": "manual",
+    "source": "Expo SDK 56+ (removal in SDK 56)",
+    "confidenceHistory": 0.95
+  },
+  {
+    "symbol": "ViewPropTypes",
+    "argType": "import",
+    "newExpression": "deprecated-react-native-prop-types",
+    "transformType": "deterministic",
+    "source": "React Native 0.66+",
+    "confidenceHistory": 0.99
+  },
+  {
+    "symbol": "react-native/Libraries/",
+    "argType": "deep_import",
+    "newExpression": "react-native (root import)",
+    "transformType": "deterministic",
+    "source": "React Native 0.80+",
+    "confidenceHistory": 0.98
+  },
+  {
+    "symbol": "AppState.removeEventListener",
+    "argType": "function",
+    "newExpression": "AppState.removeEventListener (removed) or use remove listener directly",
+    "transformType": "deterministic",
+    "source": "React Native 0.70+",
+    "confidenceHistory": 0.99
+  },
+  {
+    "symbol": "PushNotificationIOS",
+    "argType": "library",
+    "newExpression": "Apple's User Notifications framework (new APIs)",
+    "transformType": "manual",
+    "source": "React Native 0.74+",
+    "confidenceHistory": 0.95
+  },
+  {
+    "symbol": "PropTypes",
+    "argType": "import",
+    "newExpression": "TypeScript or deprecated-react-native-prop-types",
+    "transformType": "manual",
+    "source": "React Native 0.66+",
+    "confidenceHistory": 0.98
+  },
+  {
+    "symbol": "StyleSheet.absoluteFill",
+    "argType": "property",
+    "newExpression": "StyleSheet.absoluteFillObject",
+    "transformType": "deterministic",
+    "source": "React Native 0.85+",
+    "confidenceHistory": 0.99
+  },
+  {
+    "symbol": "expo-firebase-core",
+    "argType": "package_import",
+    "newExpression": "@react-native-firebase/app",
+    "transformType": "manual",
+    "source": "Expo SDK 48+",
+    "confidenceHistory": 0.98
+  },
+  {
+    "symbol": "expo-localization.isRTL",
+    "argType": "property",
+    "newExpression": "Localization.getLocales()",
+    "transformType": "deterministic",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.95
+  },
+  {
+    "symbol": "expo-localization.locale",
+    "argType": "property",
+    "newExpression": "Localization.getLocales()",
+    "transformType": "deterministic",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.95
+  },
+  {
+    "symbol": "expo-localization.currency",
+    "argType": "property",
+    "newExpression": "Localization.getLocales()",
+    "transformType": "deterministic",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.95
+  },
+  {
+    "symbol": "expo-localization.region",
+    "argType": "property",
+    "newExpression": "Localization.getLocales()",
+    "transformType": "deterministic",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.95
+  },
+  {
+    "symbol": "expo-localization.timezone",
+    "argType": "property",
+    "newExpression": "Localization.getLocales()",
+    "transformType": "deterministic",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.95
+  },
+  {
+    "symbol": "expo-cellular.allowsVoip",
+    "argType": "function",
+    "newExpression": "allowsVoipAsync()",
+    "transformType": "deterministic",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.95
+  },
+  {
+    "symbol": "expo-cellular.carrier",
+    "argType": "function",
+    "newExpression": "getCarrierNameAsync()",
+    "transformType": "deterministic",
+    "source": "Expo SDK 51+",
+    "confidenceHistory": 0.95
   }
 ]

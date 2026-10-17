@@ -4,7 +4,8 @@ import path from "node:path";
 
 const FIXTURE_DIR = path.resolve(__dirname, "..", "..", "fixtures", "demo-repo");
 const PARSER_FILE = path.resolve(FIXTURE_DIR, "src", "parser.js");
-const EXPO_FILE = path.resolve(FIXTURE_DIR, "src", "test-gk.js");
+// test.js is the comprehensive fixture covering all three pipeline paths
+const EXPO_FILE = path.resolve(FIXTURE_DIR, "src", "test.js");
 
 describe("AST Scanner — Buffer deprecations (parser.js)", () => {
   it("finds all 4 deprecated Buffer() call sites in parser.js", () => {
@@ -61,7 +62,7 @@ describe("AST Scanner — Buffer deprecations (parser.js)", () => {
   });
 });
 
-describe("AST Scanner — Expo deprecations (test-gk.js)", () => {
+describe("AST Scanner — Expo + mixed deprecations (test.js)", () => {
   it("detects deprecated expo-av package import", () => {
     const callSites = scanDirectory(EXPO_FILE);
     const expoAv = callSites.find(
@@ -128,9 +129,9 @@ describe("AST Scanner — Expo deprecations (test-gk.js)", () => {
     expect(platform).toBeDefined();
   });
 
-  it("finds at least 8 deprecated usages total", () => {
+  it("finds at least 20 deprecated usages total (mixed: manual + deterministic + LLM)", () => {
     const callSites = scanDirectory(EXPO_FILE);
-    expect(callSites.length).toBeGreaterThanOrEqual(8);
+    expect(callSites.length).toBeGreaterThanOrEqual(20);
   });
 
   it("includes snippet for each call site", () => {
@@ -150,7 +151,7 @@ describe("AST Scanner — Single file mode", () => {
 
   it("accepts a directory path and scans all files", () => {
     const callSites = scanDirectory(FIXTURE_DIR);
-    // Should find both parser.js Buffer calls and test-gk.js Expo calls
+    // Should find Buffer calls (parser.js) + Expo/mixed calls (test.js)
     expect(callSites.length).toBeGreaterThan(4);
   });
 });
